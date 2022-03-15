@@ -68,17 +68,12 @@ public class APIs {
         return modelAndView;
     }
     @PostMapping(value = "/validate", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public void validate(@RequestBody MultiValueMap<String, String> formData) {
+    public ModelAndView validate(@RequestBody MultiValueMap<String, String> formData) {
         if (!userDao.isValidUser(formData)) {
-//            return errorMessageModelAndView("Wrong credentials");
-            System.out.println("Wrong credentials");
+            return errorMessageModelAndView("Wrong credentials");
         }
-//        formData.clear();
-        getUserDetails();
-//        ModelAndView modelAndView = new ModelAndView("profile");
-//        modelAndView.getModel().put("name", "Login");
-//        modelAndView.getModel().put("email", "success");
-//        return modelAndView;
+        ModelAndView modelAndView = getUserDetails();
+        return modelAndView;
     }
 
 
@@ -91,17 +86,14 @@ public class APIs {
         return modelAndView;
     }
     @PostMapping(value = "/addPost", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public void addPost(@RequestBody MultiValueMap<String, String> formData) {
+    public ModelAndView addPost(@RequestBody MultiValueMap<String, String> formData) {
         if (userDao.getLoggedInUserEmail() == null) {
-            System.out.println("Please login first");
-//            return errorMessageModelAndView("Please login first");
+            return errorMessageModelAndView("Please login first");
         }
         System.out.println("add post 94 "+userDao.getLoggedInUserEmail());
         postDao.create(formData, userDao.getLoggedInUserEmail());
-        getUserDetails();
-//        ModelAndView modelAndView = new ModelAndView("profile");
-//        modelAndView.getModel().put("name", "Login");
-//        modelAndView.getModel().put("email", "success");
+        ModelAndView modelAndView = getUserDetails();
+        return modelAndView;
     }
 
 
@@ -109,6 +101,66 @@ public class APIs {
     /*--------------------------------------------------------------------------
     DISPLAY USER DETAILS
     * ---------------------------------------------------------------------------*/
+   /* @GetMapping("/displayUserDetails")
+    public ModelAndView getUserDetails() {
+        ModelAndView modelAndView = new ModelAndView("users");
+
+        User user = userDao.getUserProfile(userDao.getLoggedInUserEmail());
+
+        modelAndView.getModel().put("name", user.getName());
+        modelAndView.getModel().put("email", user.getEmail());
+
+//        System.out.println("50  "+userProfile.entrySet().getClass().getName());
+        String userEmail = user.getEmail();
+        List<Post> posts = postDao.readById(userEmail);
+
+//        for (Map.Entry entry : userProfile.entrySet()) {
+//            users.add((User) entry.getValue());
+//        }
+//        System.out.println("Type %%%%%%% "+ users.getClass().getName());
+        modelAndView.getModel().put("users", posts);
+        return modelAndView;
+    }*/
+    @GetMapping("/displayUserDetails")
+    public ModelAndView getUserDetails() {
+        ModelAndView modelAndView = new ModelAndView("users");
+        Map<Integer, Post> userProfile = new HashMap<>();
+
+        String email = userDao.getLoggedInUserEmail();
+        User user = userDao.getUserProfile(email);
+        modelAndView.getModel().put("Name", user.getName());
+        modelAndView.getModel().put("Email", user.getEmail());
+
+        System.out.println(postDao.readById(email));
+        List<Post> temp = postDao.readById(email);
+        System.out.println(temp.get(0).getContent());
+//        Integer i = 0;
+        for (int i=0; i < temp.size(); i++) {
+            userProfile.put(i, (Post) temp.get(i));
+        }
+
+        Facebook.User.User user1 = new Facebook.User.User("b","b","b");
+
+//        Post post = new Post("asd", user1);
+
+//        userProfile.put("emails",post );
+
+//        Post post1 = new Post("asd", user1);
+
+//        userProfile.put("emails1",post1 );
+        System.out.println("50  "+userProfile.entrySet().getClass().getName());
+        List<Post> Posts = new ArrayList<>();
+        for (Map.Entry entry : userProfile.entrySet()) {
+            Posts.add((Post) entry.getValue());
+        }
+//        System.out.println("Type %%%%%%% "+ post.getClass().getName());
+        modelAndView.getModel().put("users", Posts);
+        return modelAndView;
+    }
+
+
+    /*
+
     @GetMapping("/displayUserDetails")
     public ModelAndView getUserDetails() {
         ModelAndView modelAndView = new ModelAndView("profile");
@@ -120,16 +172,18 @@ public class APIs {
         modelAndView.getModel().put("email", user.getEmail());
         System.out.println(user.getEmail()+" "+user.getName());
 
-        List<Post> posts = postDao.readById(user.getEmail());
-
+        List<Post> posts =
+        System.out.println(posts.get(0));
          //                for (Map.Entry entry : userProfile.entrySet()) {
-//                    users.add((User) entry.getValue());
+
+//                        <label><b>{{User.name}}</b></label><br/>//                    users.add((User) entry.getValue());
 //                }
         System.out.println("inside getUserDetails ");//posts.get(0).getClass().getName());
-        for(int i=0; i < posts.size(); i++){
-            System.out.println(posts.get(i).getContent().getClass().getName());
-            modelAndView.getModel().put("posts", posts.get(i).getContent());
-        }
+//        for(int i=0; i < posts.size(); i++){
+//            System.out.println(posts.get(i).getContent().getClass().getName());
+//            modelAndView.getModel().put("posts", posts.get(i).getContent());
+//        }
+        modelAndView.getModel().put("posts", posts.get(0));
         return modelAndView;
-    }
+    }*/
 }

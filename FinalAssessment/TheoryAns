@@ -1,0 +1,251 @@
+Ans 3 :
+
+    https://github.com/moin313/git-task2/compare/A?expand=1
+
+    https://github.com/moin313/git-task2/pull/1
+
+Ans 4 :
+    Singleton pattern is a design solution where an application wants to have one and only one instance of any class,
+    in all possible scenarios without any exceptional condition.
+
+    Singleton with eager initialization:-
+    This is a design pattern where an instance of a class is created much before it is actually required.
+    Mostly it is done on system startup. In an eager initialization singleton pattern, the singleton instance is created
+    irrespective of whether any other class actually asked for its instance or not.
+
+    public class EagerSingleton {
+      private static volatile EagerSingleton instance = new EagerSingleton();
+
+      private EagerSingleton() {
+      }
+
+      public static EagerSingleton getInstance() {
+        return instance;
+      }
+    }
+
+    Instance is created irrespective of it is required in runtime or not. If this instance is not big object and you can
+    live with it being unused.
+
+
+
+Singleton with lazy initialization:-
+    Lazy initialization is the tactic of delaying the creation of an object, the calculation of a value,
+    or some other expensive process, until the first time it is needed. In a singleton pattern, it restricts the creation
+    of the instance until it is requested for first time.
+
+    public final class LazySingleton {
+      private static volatile LazySingleton instance = null;
+
+      // private constructor
+      private LazySingleton() {
+      }
+
+      public static LazySingleton getInstance() {
+        if (instance == null) {
+          synchronized (LazySingleton.class) {
+            instance = new LazySingleton();
+          }
+        }
+        return instance;
+      }
+    }
+
+lazy initialization:-
+    In situations like on-demand object creation where we create an object of the class only when it is accessed,
+    lazy initialization works very well. It helps application load faster because it does not depend upon instance
+    creation at the time of application startup.
+
+    Drawback:
+    When two threads T1 and T2 comes to create instance and execute ?instance==null?, both threads have identified instance
+    variable to null thus assume they must create an instance.
+    They sequentially goes to synchronized block and create the instances. At the end,we have two instances in our application.
+    double checked locking is a solution for above approach.This principle tells us to recheck the instance variable again in
+    synchronized block in given below way:
+    public class LazySingleton {
+         private static volatile LazySingleton instance = null;
+
+         private LazySingleton() {}
+
+         public static LazySingleton getInstance() {
+            if (instance == null) {
+                synchronized (LazySingleton.class) {
+                    instance = new LazySingleton();
+                }
+            }
+            return instance;
+
+        }
+    }
+
+
+
+
+Ans 6 :
+
+    The Data Access Object (DAO) pattern is a structural pattern that allows us to isolate the application/business layer
+    from the persistence layer using an abstract API.
+    The API hides from the application all the complexity of performing CRUD operations in the underlying storage mechanism.
+    This permits both layers to evolve separately without knowing anything about each other.
+    ---------------------------------------------------------------------------------------------------------------------
+
+@Entity
+@Table(name = "User_details")
+public class User {
+    @Id
+    private String email;
+    private String name;
+    private String password;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private Set<Post> posts = new HashSet<>();
+
+    public User(){}
+
+    public User(String name, String password, String email) {
+        this.name = name;
+        this.password = password;
+        this.email = email;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Set<Post> getPosts() {
+        return posts;
+    }
+
+    public void setPosts(Set<Post> posts) {
+        this.posts = posts;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+
+    The User class is just a plain container for user data, so it doesn't implement any other behavior worth stressing.
+       public interface UserDao {
+            boolean addNewUser(MultiValueMap<String, String> formData);
+
+            boolean isUserExist(String email);
+
+            boolean isValidUser(MultiValueMap<String, String> formData);
+
+            public String getLoggedInUserEmail();
+
+            User getUserProfile(String email);
+       }
+
+    it's clear that in above the Dao interface defines an abstract API that performs CRUD operations.
+
+
+@Component
+public class UserDaoImpl implements UserDao{
+    private String loggedInUserEmail = null;
+
+    @Autowired
+    Session session;
+
+
+    /*------------------------------------------------
+        THIUS IS A REGISTRATION IMLIMENTATION OF A NEW USER
+     -------------------------------------------------*/
+    @Override
+    public boolean addNewUser(MultiValueMap<String, String> formData) {
+        try{
+            String email = formData.get("email").get(0);
+            String name = formData.get("name").get(0);
+            String pass = formData.get("password").get(0);
+            User user = new User(name, pass, email);
+            session.beginTransaction();
+            session.persist(user);
+            session.getTransaction().commit();
+            return true;
+        }catch(Exception e){
+            return false;
+        }
+    }
+
+
+    /*----------------------------------------
+    THIS FUNCTION WILL CHECK USER EXISTANCE IN
+    DATABASE.
+     ---------------------------------------*/
+    @Override
+    public boolean isUserExist(String email) {
+        try {
+            String hql = "select email from User where email = :email";
+            Query query = session.createQuery(hql);
+            query.setParameter("email", email);
+            System.out.println(query.getSingleResult()+"Is user exist "+email.equals(query.getSingleResult()));
+            return  email.equals(query.getSingleResult());
+        }catch (Exception e){
+            return false;
+        }
+    }
+
+
+    /*----------------------------------------
+    THIS FUNCTION WILL VALIDATE USER.
+     ---------------------------------------*/
+    @Override
+    public boolean isValidUser(MultiValueMap<String, String> formData) {
+        String email = formData.get("email").get(0);
+        String password = formData.get("password").get(0);
+        try {
+            User user = session.get(User.class, email);
+            if(user.getEmail().equals(email) && user.getPassword().equals(password)) {
+                System.out.println("valid user ");
+                setLoggedInUserDetail(email);
+                return true;
+            }else {
+                System.out.println("invalid user");
+                return false;
+            }
+        }catch (Exception e){
+            System.out.println(e+" exception");
+            return false;
+        }
+    }
+
+    private void setLoggedInUserDetail(String email) {
+        loggedInUserEmail = email;
+    }
+
+    @Override
+    public String getLoggedInUserEmail() {
+        return loggedInUserEmail;
+    }
+
+    @Override
+    public User getUserProfile(String email) {
+        try{
+            User user = session.get(User.class, email);
+            System.out.println("96 "+user.getEmail());
+            return user;
+        }catch (Exception e){
+            System.out.println("exception in getUserProfile "+ e);
+        }
+        return null;
+    }
+
+
+}

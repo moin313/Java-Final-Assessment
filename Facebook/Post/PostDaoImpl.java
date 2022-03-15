@@ -41,13 +41,12 @@ public class PostDaoImpl implements PostDao{
     @Override
     public List<Post> readById(String email) {
         try{
-            Query query = session.createQuery("select id, content from Post where user_email=:email ");
-//            List<Post> post = session.createQuery("from Post where user_email=:email ",Post.class).getResultList();
+            Query query = session.createQuery("from Post where user_email=:email ");
             query.setParameter("email",email);
-            List<Post> posts = query.getResultList();
-            System.out.println("posts "+posts);
-            return query.getResultList();
+            List<Post> posts = (List<Post>) query.getResultList();
+            return posts;
         }catch (Exception e){
+                System.out.println("exception");
             return null;
         }
     }

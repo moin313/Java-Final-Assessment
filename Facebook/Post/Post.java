@@ -48,12 +48,12 @@ public class Post {
         this.content = content;
     }
 
-   /* @Override
+    @Override
     public String toString() {
         return "Post{" +
                 "id=" + id +
                 ", content='" + content + '\'' +
                 ", user=" + user +
                 '}';
-    }*/
+    }
 }
